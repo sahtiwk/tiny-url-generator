@@ -5,7 +5,7 @@
   "license": "ISC",
   "author": "sahtiwk",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "devStart": "nodemon server.js"
   },
