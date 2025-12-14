@@ -10,7 +10,8 @@ const connectDB = async () => {
     const dbURI = process.env.MONGO_URI || "mongodb+srv://sahtiwk:Samagnya9@tinycluster.kybmsvj.mongodb.net/?appName=tinycluster";
 
     const conn = await mongoose.connect(dbURI, {
-      serverSelectionTimeoutMS: 5000 // Fail faster if no connection
+      serverSelectionTimeoutMS: 5000,
+      family: 4 // Force IPv4 to avoid Vercel/Atlas IPv6 issues
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 
