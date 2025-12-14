@@ -9,6 +9,21 @@ mongoose.connection.on('error', err => {
   console.error('Mongoose connection error:', err);
 });
 
+// Database Connection
+const dbURI = process.env.MONGO_URI;
+
+mongoose.connect(dbURI)
+  .then(async () => {
+    console.log('MongoDB Connected');
+
+    // Seed default data if empty
+    const count = await ShortUrl.countDocuments();
+    if (count === 0) {
+      await ShortUrl.create({ full: 'https://youtu.be/dQw4w9WgXcQ?si=5D4wGw_psazNtcZn' });
+      console.log('Database seeded.');
+    }
+  })
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: false }));
