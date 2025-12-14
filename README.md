@@ -1,7 +1,6 @@
 # 🔗 Tiny URL Generator
 A clean and simple URL shortener application built with Node.js, Express, and MongoDB. This project allows users to create short, manageable links from long URLs and tracks the number of times each link is accessed.
 
-**Live Demo:** [https://short-url-generator-tau.vercel.app/](https://short-url-generator-tau.vercel.app/)
 
 ## 🤔 How It Works
 The application follows a simple, effective logic:
