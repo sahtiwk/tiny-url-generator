@@ -1,23 +1,30 @@
-const mongoose = require('mongoose');
+// utils/db.js
+const mongoose = require("mongoose");
+const ShortUrl = require("../models/shortUrls");
 
 let cached = global.mongoose;
-
 if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
 async function dbConnect() {
   if (cached.conn) return cached.conn;
-  if (!process.env.MONGO_URI) {
-    throw new Error('Please define the MONGO_URI environment variable');
-  }
+
   if (!cached.promise) {
     cached.promise = mongoose.connect(process.env.MONGO_URI, {
+      bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
-      family: 4, // Force IPv4 for serverless/Atlas
-    }).then((mongoose) => mongoose);
+    });
   }
+
   cached.conn = await cached.promise;
+
+  // Seed once
+  const count = await ShortUrl.countDocuments();
+  if (count === 0) {
+    await ShortUrl.create({ full: "https://youtu.be/dQw4w9WgXcQ" });
+  }
+
   return cached.conn;
 }
 
