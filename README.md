@@ -45,19 +45,5 @@ cd your-repo-name
 ```bash
 npm install
 ```
-3. **Set up Environment VariablesCreate a file named .env in the root of your project and add your MongoDB connection string:**
-```bash
-MONGO_URI=mongodb+srv://<username>:<password>@cluster...
+3. **Set up Environment Variables. Create a file named .env in the root of your project and add your MongoDB connection string:**
 ```
-4. **Run the development server**
-```bash
-npm run devStart
-```
-The application will be available at: `http://localhost:5000`
-
-## ☁️ Deployment
-
-This application is deployed on Vercel.
-For the deployment to succeed:
-- The MONGO_URI environment variable must be set in the Vercel project settings.
-- The Vercel deployment IP must be whitelisted in MongoDB Atlas (0.0.0.0/0 for access from anywhere)

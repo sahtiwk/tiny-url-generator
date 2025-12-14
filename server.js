@@ -1,6 +1,7 @@
 const express = require('express');
 const ShortUrl = require('./models/shortUrls');
 const dbConnect = require('./utils/db');
+require('dotenv').config();
 
 const app = express();
 
@@ -29,5 +30,12 @@ app.get('/:shortUrl', async (req, res) => {
   await shortUrl.save();
   res.redirect(shortUrl.full);
 });
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
 module.exports = app;

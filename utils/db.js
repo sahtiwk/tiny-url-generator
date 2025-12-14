@@ -8,6 +8,9 @@ if (!cached) {
 }
 
 async function dbConnect() {
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI must be defined in environment');
+  }
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
