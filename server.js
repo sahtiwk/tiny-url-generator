@@ -3,40 +3,21 @@ const mongoose = require('mongoose');
 const ShortUrl = require('./models/shortUrls');
 const app = express();
 
-// Connection resiliency
-const connectDB = async () => {
-  try {
-    // SECURITY WARNING: Hardcoded secrets should be avoided. Use process.env.MONGO_URI for production.
-    const dbURI = process.env.MONGO_URI || "mongodb+srv://sahtiwk:Samagnya9@tinycluster.kybmsvj.mongodb.net/?appName=tinycluster";
+// Database Connection
+const dbURI = process.env.MONGO_URI;
 
-    const conn = await mongoose.connect(dbURI, {
-      serverSelectionTimeoutMS: 5000,
-      family: 4 // Force IPv4 to avoid Vercel/Atlas IPv6 issues
-    });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+mongoose.connect(dbURI)
+  .then(async () => {
+    console.log('MongoDB Connected');
 
-    // Check and seed database if empty
+    // Seed default data if empty
     const count = await ShortUrl.countDocuments();
     if (count === 0) {
-      await ShortUrl.create({
-        full: 'https://youtu.be/dQw4w9WgXcQ?si=5D4wGw_psazNtcZn'
-      });
-      console.log('Database seeded with default URL.');
+      await ShortUrl.create({ full: 'https://youtu.be/dQw4w9WgXcQ?si=5D4wGw_psazNtcZn' });
+      console.log('Database seeded.');
     }
-  } catch (err) {
-    console.error('MongoDB Connection Error:', err);
-    // Don't exit process in serverless, but log heavily
-  }
-};
-
-// Connect immediately
-connectDB();
-
-// Handle interaction before connection is ready
-mongoose.connection.on('error', err => {
-  console.error('Mongoose connection error:', err);
-});
-
+  })
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: false }));
@@ -55,7 +36,7 @@ app.get('/:shortUrl', async (req, res) => {
   const shortUrl = await ShortUrl.findOne({ short: req.params.shortUrl });
   if (shortUrl == null) return res.sendStatus(404);
   shortUrl.clicks++;
-  shortUrl.save();
+  await shortUrl.save();
   res.redirect(shortUrl.full);
 });
 
