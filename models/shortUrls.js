@@ -1,15 +1,18 @@
 const mongoose = require('mongoose');
-const shortid = require('shortid');
+const { nanoid } = require('nanoid');
 
 const shortUrlSchema= new mongoose.Schema({
     full: {
         type: String,
-        required: true
+        required: true,
+        match: [/^https?:\/\/.+/, 'Invalid URL']
     },
     short: {
         type: String,
         required: true,
-        default: shortid.generate
+        default: () => nanoid(8),
+        unique: true,
+        index: true
     },
     clicks: {
         type: Number,
