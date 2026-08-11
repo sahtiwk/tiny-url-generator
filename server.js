@@ -47,7 +47,6 @@ app.post('/shortUrls', limiter, async (req, res, next) => {
 });
 
 app.get('/:shortUrl', async (req, res, next) => {
-  await dbConnect();
   const { shortUrl } = req.params;
 
   try {
@@ -58,9 +57,16 @@ app.get('/:shortUrl', async (req, res, next) => {
     }
 
     if (cachedFullUrl) {
-      ShortUrl.updateOne({ short: shortUrl }, { $inc: { clicks: 1 } }).exec().catch(console.error);
+      // Background DB connection & click update (non-blocking!)
+      dbConnect().then(() => {
+        ShortUrl.updateOne({ short: shortUrl }, { $inc: { clicks: 1 } }).exec().catch(console.error);
+      }).catch(console.error);
+      
       return res.redirect(cachedFullUrl);
     }
+
+    // Cache miss: We must connect to DB to find the url
+    await dbConnect();
 
     const urlDoc = await ShortUrl.findOne({ short: shortUrl });
     if (!urlDoc) return res.sendStatus(404);
