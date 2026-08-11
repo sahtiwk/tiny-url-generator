@@ -5,14 +5,14 @@ const dbConnect = require('./utils/db');
 require('dotenv').config();
 
 
-const { createClient } = require('redis');
+const { Redis } = require('@upstash/redis');
 
-const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
-redisClient.connect().catch(console.error);
+const redisClient = process.env.UPSTASH_REDIS_REST_URL
+  ? new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  })
+  : null;
 
 const app = express();
 
@@ -47,21 +47,35 @@ app.post('/shortUrls', limiter, async (req, res, next) => {
 });
 
 app.get('/:shortUrl', async (req, res, next) => {
-  await dbConnect();
   const { shortUrl } = req.params;
 
   try {
-    const cachedFullUrl = await redisClient.get(shortUrl);
+    let cachedFullUrl = null;
+
+    if (redisClient) {
+      cachedFullUrl = await redisClient.get(shortUrl);
+    }
 
     if (cachedFullUrl) {
-      ShortUrl.updateOne({ short: shortUrl }, { $inc: { clicks: 1 } }).exec().catch(console.error);
+      // Background DB connection & click update (non-blocking!)
+      dbConnect().then(() => {
+        ShortUrl.updateOne({ short: shortUrl }, { $inc: { clicks: 1 } }).exec().catch(console.error);
+      }).catch(console.error);
+      
       return res.redirect(cachedFullUrl);
     }
+
+    // Cache miss: We must connect to DB to find the url
+    await dbConnect();
 
     const urlDoc = await ShortUrl.findOne({ short: shortUrl });
     if (!urlDoc) return res.sendStatus(404);
 
-    await redisClient.setEx(shortUrl, 86400, urlDoc.full);
+    if (redisClient) {
+      // @upstash/redis syntax for expiration
+      await redisClient.set(shortUrl, urlDoc.full, { ex: 86400 });
+    }
+
     ShortUrl.updateOne({ short: shortUrl }, { $inc: { clicks: 1 } }).exec().catch(console.error);
 
     res.redirect(urlDoc.full);
