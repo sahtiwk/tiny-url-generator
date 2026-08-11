@@ -4,6 +4,7 @@ const ShortUrl = require('./models/shortUrls');
 const dbConnect = require('./utils/db');
 require('dotenv').config();
 
+
 const { createClient } = require('redis');
 
 const redisClient = createClient({
@@ -51,7 +52,7 @@ app.get('/:shortUrl', async (req, res, next) => {
 
   try {
     const cachedFullUrl = await redisClient.get(shortUrl);
-    
+
     if (cachedFullUrl) {
       ShortUrl.updateOne({ short: shortUrl }, { $inc: { clicks: 1 } }).exec().catch(console.error);
       return res.redirect(cachedFullUrl);
@@ -62,7 +63,7 @@ app.get('/:shortUrl', async (req, res, next) => {
 
     await redisClient.setEx(shortUrl, 86400, urlDoc.full);
     ShortUrl.updateOne({ short: shortUrl }, { $inc: { clicks: 1 } }).exec().catch(console.error);
-    
+
     res.redirect(urlDoc.full);
   } catch (error) {
     console.error('Redis error or DB error:', error);
